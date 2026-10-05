@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#eaece1">
+  <title>阿星的灵感岛 · 开车来认识我</title>
+  <meta name="description" content="开着一辆小车，探索阿星的灵感岛。走进创作展厅、生活花园和关于我的小屋，认识叶昊霖的创作与日常。">
+  <link rel="canonical" href="https://tyler9169.github.io/axing-personal-site/v3/">
+  <meta property="og:title" content="阿星的灵感岛 · 开车来认识我">
+  <meta property="og:description" content="开着小车，探索我的创作与日常。">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://tyler9169.github.io/axing-personal-site/v3/">
+  <meta property="og:image" content="https://tyler9169.github.io/axing-personal-site/assets/travel-01.webp">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css">
+  <script src="app.js" type="module"></script>
+</head>
+<body>
+  <a class="skip-link" href="../v2/">前往可直接阅读的图文版</a>
+  <main id="experience" aria-label="阿星的灵感岛，3D 互动个人网站">
+    <div id="world" role="img" aria-label="可驾驶小车探索的三维小岛，包含个人介绍、作品展厅、生活花园与联系空间。也可通过导航按钮直接探索各地点。"></div>
+    <div class="world-vignette" aria-hidden="true"></div>
+    <header class="topbar">
+      <button class="brand" id="home-button" aria-label="返回小岛起点"><span class="brand-mark">a.</span><span><strong>阿星的灵感岛</strong><small>A LITTLE WORLD OF MINE</small></span></button>
+      <nav aria-label="选择探索地点"><button data-go="about">关于我</button><button data-go="work">创作展厅</button><button data-go="life">生活花园</button><button data-go="connect">认识一下 <span aria-hidden="true">↗</span></button></nav>
+      <a class="reading-link" href="../v2/">图文版 <span aria-hidden="true">↗</span></a>
+    </header>
+
+    <section class="welcome" id="welcome" aria-labelledby="welcome-title">
+      <p class="eyebrow"><span class="live-dot"></span> WELCOME TO MY LITTLE WORLD</p>
+      <h1 id="welcome-title">好奇，<br><span class="headline-line">带你去<em>远方。</em></span></h1>
+      <p class="welcome-en">A life worth exploring.</p>
+      <p class="welcome-copy">你好，我是阿星，叶昊霖。<br>把创作与生活，装进一座小岛。<br>这一次，开车来认识我吧。</p>
+      <button class="primary" id="start-button" disabled><span id="start-text">小岛准备中…</span><span aria-hidden="true">↗</span></button>
+      <button class="tour-link" id="tour-button" disabled>也可以，让我带你逛逛 <span aria-hidden="true">→</span></button>
+      <div class="welcome-note"><span>GUANGZHOU, CHINA</span><span>EST. IN CURIOSITY</span></div>
+    </section>
+    <div class="world-labels" id="world-labels" aria-label="岛上的地点"></div>
+    <div class="loading-note" id="loading-note" role="status">正在搭建这一方小天地…</div>
+    <section class="fallback" id="fallback" hidden><h2>换一种方式，<br>继续认识我。</h2><p>当前设备暂时无法开启 3D 场景。你仍可以选择顶部地点阅读内容，或打开完整图文版。</p><a class="primary" href="../v2/">打开图文版 ↗</a></section>
+
+    <aside class="exploration-status" id="exploration-status" hidden><span class="eyebrow">YOUR LITTLE ADVENTURE</span><p id="journey-title">随心开，慢慢逛。</p><button id="next-stop">下一站 <span aria-hidden="true">→</span></button></aside>
+    <div class="destination-prompt" id="destination-prompt" hidden><span><small id="nearby-subtitle"></small><strong id="nearby-title"></strong></span><button id="enter-button">进去看看 <kbd>E</kbd></button></div>
+
+    <aside class="island-map" aria-label="小岛地图"><div class="map-heading"><span>ISLAND GUIDE</span><button id="view-button" aria-pressed="false" aria-label="切换全岛视角">全岛视角 ↗</button></div><div class="map-body"><svg viewBox="0 0 180 128" aria-hidden="true"><rect x="8" y="8" width="164" height="112" rx="28" fill="#d9decb"/><rect x="25" y="22" width="130" height="84" rx="20" fill="none" stroke="#f5f1e6" stroke-width="9"/><path d="M90 23v83M26 66h128" stroke="#f5f1e6" stroke-width="8"/><rect x="44" y="28" width="30" height="22" rx="3" fill="#96a18a"/><rect x="109" y="28" width="28" height="22" rx="3" fill="#c4ab8b"/><circle cx="55" cy="86" r="13" fill="#a5b090"/><rect x="109" y="80" width="26" height="17" rx="4" fill="#c7b294"/><g id="map-car" transform="translate(90 101)"><circle r="6" fill="#f3eee3"/><path d="M0 -5 3.5 4 0 2 -3.5 4Z" fill="#3e5b46"/></g></svg><button data-go="about" class="map-stop stop-about" aria-label="前往关于我的小屋">1</button><button data-go="work" class="map-stop stop-work" aria-label="前往创作展厅">2</button><button data-go="life" class="map-stop stop-life" aria-label="前往生活花园">3</button><button data-go="connect" class="map-stop stop-connect" aria-label="前往你好">4</button></div><div class="map-progress"><span>已发现 <b id="visited-count">0</b> / 4</span><span class="progress-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span></div></aside>
+    <div class="mobile-controls" id="mobile-controls" hidden aria-label="驾驶控制"><div class="dpad"><button data-drive="forward" aria-label="前进">↑</button><button data-drive="left" aria-label="左转">←</button><button data-drive="reverse" aria-label="倒车">↓</button><button data-drive="right" aria-label="右转">→</button></div><button class="mobile-brake" data-drive="brake" aria-label="刹车">刹车</button></div>
+    <footer class="bottom-bar"><div class="keyboard-guide"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / 方向键驾驶</span><span><kbd>空格</kbd> 刹车</span><span>拖动环顾 · 滚轮缩放</span></div><div class="bottom-actions"><button id="reset-button" aria-label="小车回到起点">↺ 回到起点</button><button id="help-button" aria-label="查看操作指南">?</button></div></footer>
+    <p class="toast" id="toast" role="status" aria-live="polite"></p>
+    <span id="drive-status" class="sr-only" role="status"></span>
+  </main>
+
+  <dialog id="journal" class="journal" aria-labelledby="journal-title"><header class="journal-top"><span id="journal-eyebrow" class="eyebrow"></span><button class="close" data-close="journal" aria-label="关闭展厅，继续探索">×</button></header><div id="journal-content"></div><footer class="journal-footer"><span id="journal-counter"></span><button id="journal-next">前往下一站 <span aria-hidden="true">→</span></button></footer></dialog>
+  <dialog id="photo-dialog" class="photo-dialog" aria-labelledby="photo-title"><header><p id="photo-title"></p><button class="close" data-close="photo-dialog" aria-label="关闭大图">×</button></header><img id="photo-image" alt=""><p>ESC 关闭 · 继续发现更多片刻</p></dialog>
+  <dialog id="help-dialog" class="help-dialog" aria-labelledby="help-title"><header><span class="eyebrow">A SMALL GUIDE</span><button class="close" data-close="help-dialog" aria-label="关闭操作指南">×</button></header><h2 id="help-title">慢慢开，<br>尽兴逛。</h2><dl><div><dt>W / ↑</dt><dd>前进</dd></div><div><dt>S / ↓</dt><dd>倒车</dd></div><div><dt>A D / ← →</dt><dd>行驶中转向</dd></div><div><dt>空格 / Shift</dt><dd>刹车 / 加速</dd></div><div><dt>E / Enter</dt><dd>在地点附近进入展厅</dd></div><div><dt>M / R</dt><dd>全岛视角 / 回到起点</dd></div><div><dt>拖动 / 滚轮</dt><dd>环顾小岛 / 缩放</dd></div></dl><p>点击地图或地点标签，小车会自动带路。手机可使用屏幕方向键。四个地点里，藏着我的创作与日常。</p><button id="reset-progress" class="reset-progress">重新探索四个地点 ↺</button></dialog>
+  <noscript><div class="no-script">开启 JavaScript 即可探索小岛，或<a href="../v2/">直接阅读图文版 →</a></div></noscript>
+</body>
+</html>
