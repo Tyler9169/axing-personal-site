@@ -51,7 +51,7 @@ function tick(driver,input={},dt=1/60){
 }
 function finishReturn(driver){
   for(let i=0;i<180*60&&driver.mode===DRIVE_MODE.RETURNING_TO_START;i++){
-    assert.equal(tick(driver,{throttle:1,steer:1,boost:true}),null);
+    assert.equal(tick(driver),null);
   }
   assert.equal(driver.mode,DRIVE_MODE.EXPLORE);
   assert.ok(Math.hypot(driver.vehicle.x-SPAWN.x,driver.vehicle.z-SPAWN.z)<.01);
@@ -69,11 +69,11 @@ test('stage 2 / 2: cruise stays collision-free at 30 and 60 fps and ignores manu
     assert.deepEqual(d.vehicle,baseline.vehicle);
   }
 });
-test('stage 2 / 3: starting exploration immediately cancels cruise and locks return control',()=>{
+test('stage 2 / 3: starting exploration cancels cruise and returns by default',()=>{
   const d=controller();for(let i=0;i<720;i++)tick(d);
   const position={...d.vehicle};d.startExploring();
   assert.equal(d.mode,DRIVE_MODE.RETURNING_TO_START);assert.equal(d.vehicle.x,position.x);assert.equal(d.vehicle.z,position.z);
-  const route=d.route;assert.equal(d.goTo('work'),false);d.takeControl();d.startExploring();assert.equal(d.route,route);
+  const route=d.route;assert.equal(d.goTo('work'),false);d.startExploring();assert.equal(d.route,route);
   finishReturn(d);
 });
 test('stage 2 / 4: returns from multiple cruise positions without teleporting or opening content',()=>{
@@ -86,6 +86,32 @@ test('stage 2 / 5: manual driving works after return and cancels destination dri
   const d=controller();d.startExploring();finishReturn(d);
   for(let i=0;i<60;i++)tick(d,{throttle:1});assert.ok(d.vehicle.z<SPAWN.z-2);
   assert.ok(d.goTo('about'));tick(d,{throttle:1});assert.equal(d.destination,null);assert.equal(d.route.length,0);
+});
+test('return takeover: input takes effect in the same frame and never resumes automatic return',()=>{
+  for(const input of [{throttle:1},{throttle:-1},{steer:1},{steer:-1},{brake:true},{boost:true}]){
+    const d=controller();Object.assign(d.vehicle,{x:0,z:4,angle:0});d.startExploring();
+    for(let i=0;i<30;i++)tick(d);
+    assert.ok(d.route.length);assert.equal(d.destination,SPAWN);
+    const expected={...d.vehicle};
+    d.followRoute=()=>assert.fail('automatic driving must not run after takeover');
+    for(let i=0;i<120;i++){
+      const current=i<30?input:{};
+      moveVehicle(expected,current,1/60);d.update(current,1/60);
+      assert.deepEqual(d.vehicle,expected);assert.equal(d.mode,DRIVE_MODE.EXPLORE);
+      assert.equal(d.destination,null);assert.deepEqual(d.route,[]);
+    }
+  }
+});
+test('return takeover: takeControl cancels a paused return and final heading alignment without moving the car',()=>{
+  for(const atSpawn of [false,true]){
+    const d=controller();Object.assign(d.vehicle,{z:atSpawn?SPAWN.z:4,angle:0});d.startExploring();
+    if(atSpawn){d.route=[];d.update({},1/60);assert.equal(d.mode,DRIVE_MODE.RETURNING_TO_START);}
+    else d.error='自动行驶已在障碍前暂停';
+    const before={...d.vehicle};d.takeControl();
+    assert.equal(d.mode,DRIVE_MODE.EXPLORE);assert.equal(d.error,null);
+    assert.equal(d.destination,null);assert.deepEqual(d.route,[]);assert.deepEqual(d.vehicle,before);
+    d.update({},1/60);assert.deepEqual(d.vehicle,before);
+  }
 });
 test('stage 2 / 6: each destination opens only inside its actual area and freezes the vehicle',()=>{
   for(const s of STATIONS){

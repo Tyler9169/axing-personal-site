@@ -170,7 +170,10 @@ export class DrivingController {
     const a=LOCATION_AREAS[id];if(!a)return false;
     return this.setRoute({x:a.x,z:a.z,id});
   }
-  takeControl(){if(this.mode===DRIVE_MODE.EXPLORE){this.route=[];this.destination=null;}}
+  takeControl(){
+    if(this.mode===DRIVE_MODE.RETURNING_TO_START){this.mode=DRIVE_MODE.EXPLORE;this.error=null;}
+    if(this.mode===DRIVE_MODE.EXPLORE){this.route=[];this.destination=null;}
+  }
   openLocation(id){
     if(this.mode===DRIVE_MODE.LOCATION_OPEN)return this.location===id;
     if(this.mode!==DRIVE_MODE.EXPLORE||!insideLocation(this.vehicle,id)||this.blocked.has(id)||!isFree(this.vehicle.x,this.vehicle.z))return false;
@@ -218,6 +221,7 @@ export class DrivingController {
       if(this.route.length<16&&!this.error)this.extendCruise();
       this.followRoute(dt,true);return null;
     }
+    if(input.throttle||input.steer||input.brake||input.boost)this.takeControl();
     if(this.mode===DRIVE_MODE.RETURNING_TO_START){
       this.followRoute(dt,false);
       if(!this.route.length&&!this.error&&distance(this.vehicle,SPAWN)<.01){
@@ -227,7 +231,6 @@ export class DrivingController {
       }
       return null;
     }
-    if(input.throttle||input.steer||input.brake||input.boost)this.takeControl();
     const targetId=this.destination?.id??null;
     if(this.destination){this.followRoute(dt,false);if(!this.route.length){this.destination=null;this.vehicle.speed=0;}}
     else moveVehicle(this.vehicle,input,dt);

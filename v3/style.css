@@ -10,6 +10,21 @@ dialog{border:0;padding:0;color:var(--ink);background:var(--paper)}dialog::backd
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
 
 .reset-progress{display:block;margin-top:22px;padding:10px 0;border-bottom:1px solid #aeba97;font-size:10px;color:#7c906b}
+.bottom-actions #exit-button{flex-shrink:0;white-space:nowrap;padding:8px 12px;border:1px solid var(--line);color:var(--ink)}
+.bottom-actions #exit-button:hover{background:var(--paper)}
+.about-video{margin-top:32px;min-width:0}
+.about-video h3{margin:0 0 12px;font-size:14px;line-height:1.5;font-weight:400}
+.about-video video{display:block;width:100%;max-width:100%;height:auto}
+
+/* Driving help: readable desktop hints without changing phone or page typography. */
+@media(min-width:951px){
+  body.exploring .keyboard-guide{font-size:15px;line-height:24px;color:#5e6e55;gap:8px 20px;flex-wrap:wrap;min-width:0}
+  body.exploring .keyboard-guide>span{white-space:nowrap;flex-shrink:0}
+  body.exploring .keyboard-guide kbd{font-size:13px;line-height:24px;min-width:24px;height:26px}
+  body.exploring .bottom-actions{flex-shrink:0;white-space:nowrap}
+  body.exploring .toast{font-size:15px;line-height:24px}
+  body.exploring .destination-prompt kbd{font-size:13px;line-height:20px}
+}
 
 /* Stage 1: clearer type hierarchy; retain the existing palette and layout. */
 .topbar nav button{font-size:15px}.brand strong{font-size:16px}.brand small{font-size:10px}
