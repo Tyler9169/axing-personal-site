@@ -13,7 +13,7 @@ let previewPaused=false,pendingDestination=null,welcomeTimer;
 function updatePreviewToggle(){const b=$('#preview-toggle');b.textContent=previewPaused?'播放小车':'暂停小车';b.setAttribute('aria-pressed',String(previewPaused));}
 $('#preview-toggle').addEventListener('click',()=>{previewPaused=!previewPaused;updatePreviewToggle();});
 updatePreviewToggle();
-const stationButtons=STATIONS.map((s,i)=>{const b=document.createElement('button');b.className='place-label';b.dataset.go=s.id;b.setAttribute('aria-label',`前往${s.title}`);b.innerHTML=`<span class="place-number">0${i+1}</span><span><strong>${s.title}</strong><small>${s.english}</small></span>`;$('#world-labels').append(b);return b;});
+const stationButtons=STATIONS.map(s=>{const b=document.createElement('button');b.className='place-label';b.dataset.go=s.id;b.setAttribute('aria-label',`前往${s.title}`);b.innerHTML=`<span><strong>${s.title}</strong><small>${s.english}</small></span>`;$('#world-labels').append(b);return b;});
 const photoData={
   'travel-01':['窗边的一刻','ON THE ROAD','阿星坐在窗边，望向窗外'],
   'travel-02':['窗边，城市与我','ON THE ROAD','阿星站在落地窗前眺望城市'],
