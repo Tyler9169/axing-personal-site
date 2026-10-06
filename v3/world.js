@@ -1,5 +1,6 @@
 import * as T from './vendor/three.module.min.js';
-import { STATIONS } from './driving.mjs';
+import { STATIONS, BUILDINGS } from './driving.mjs';
+import { PHONE_LAYOUT } from './mobile-input.mjs';
 
 const palette={sand:'#e7ddc5',edge:'#c9bca0',road:'#f3eddd',grass:'#b7c2a0',forest:'#49634b',sage:'#87966d',leaf:'#aab284',cream:'#f2ebdc',wood:'#a1815d',clay:'#b98b68',dark:'#34443b',water:'#d5e0d6'};
 const materialCache=new Map();
@@ -15,7 +16,7 @@ function textPlane(parent,text,w,h,x,y,z,options={}){const material=new T.MeshBa
 function tree(parent,x,z,s=1,variant=0){const g=new T.Group();g.position.set(x,0,z);g.scale.setScalar(s);parent.add(g);cylinder(g,.16,.25,2.3,palette.wood,0,1.15,0,7);const branch=cylinder(g,.07,.12,1.2,palette.wood,.25,2,0,6);branch.rotation.z=-.48;const colors=[palette.forest,palette.sage,palette.leaf];sphere(g,1.2,colors[variant%3],0,2.8,0,[1,1.25,.9]);sphere(g,.85,colors[(variant+1)%3],.65,2.65,.12,[1,1.1,.9]);sphere(g,.7,colors[(variant+2)%3],-.65,2.55,.15);cylinder(g,.64,.67,.12,'#a4ad89',0,.06,0);return g;}
 function bench(parent,x,z,rotation=0){const g=new T.Group();g.position.set(x,0,z);g.rotation.y=rotation;parent.add(g);for(const dx of [-1.05,1.05]){box(g,.13,.85,.7,palette.dark,dx,.42,0);box(g,.12,1.3,.12,palette.dark,dx,.65,-.35);}for(let i=0;i<4;i++)box(g,2.7,.13,.18,palette.wood,0,.87,-.3+i*.2);for(let i=0;i<3;i++)box(g,2.7,.16,.1,palette.wood,0,1.15+i*.2,-.4);}
 function planter(parent,x,z){cylinder(parent,.45,.3,.65,palette.clay,x,.34,z);for(let i=0;i<5;i++){const a=i*2.4;const leaf=sphere(parent,.32,palette.sage,x+Math.cos(a)*.2,.95+Math.sin(i)*.1,z+Math.sin(a)*.2,[.35,1.7,.7]);leaf.rotation.z=Math.cos(a)*.5;}}
-function arch(parent,x,z,color=palette.cream){box(parent,.45,2.4,.48,color,x-1.75,1.2,z);box(parent,.45,2.4,.48,color,x+1.75,1.2,z);const m=mesh(new T.TorusGeometry(1.75,.23,8,28,Math.PI),color,parent,x,2.4,z);m.rotation.z=0;return m;}
+function arch(parent,x,z,color=palette.cream){const m=mesh(new T.TorusGeometry(1.75,.23,8,28,Math.PI),color,parent,x,2.4,z);m.rotation.z=0;return m;}
 
 export class IslandWorld {
   constructor(host){
@@ -50,10 +51,14 @@ export class IslandWorld {
     const tagline=textPlane(this.scene,'STAY CURIOUS.  STAY YOU.',10,1.3,0,.22,19.3,{size:60,font:'Arial',color:'#9a9f87'});tagline.rotation.x=-Math.PI/2;
     for(const s of STATIONS){const g=new T.Group();g.position.set(s.x,.22,s.z);this.scene.add(g);const ring=mesh(new T.RingGeometry(1.7,1.86,48),new T.MeshBasicMaterial({color:'#a39465',transparent:true,opacity:.8,side:T.DoubleSide}),g);ring.rotation.x=-Math.PI/2;const disc=mesh(new T.CircleGeometry(1.65,32),new T.MeshBasicMaterial({color:'#dedbc3',transparent:true,opacity:.5,side:T.DoubleSide}),g,0,.001,0);disc.rotation.x=-Math.PI/2;const num=textPlane(g,String(STATIONS.indexOf(s)+1),1.8,1.8,0,.02,0,{width:256,height:256,size:160,color:'#7d8262'});num.rotation.x=-Math.PI/2;this.rings.push({g,ring,disc,id:s.id});}
   }
+  building(parent,id){
+    const b=BUILDINGS[id];parent.position.set(b.x,0,b.z);
+    for(const p of b.parts)box(parent,p.w,p.h,p.d,p.color,p.x,p.y,p.z);
+  }
   makeStudio(){
-    const g=new T.Group();g.position.set(-12,0,-9);this.scene.add(g);this.mark(g,'about');
+    const g=new T.Group();this.building(g,'about');this.scene.add(g);this.mark(g,'about');
     slab(g,12.5,9.5,.4,.22,palette.cream,0,.14,0);
-    box(g,12.5,4.5,.4,palette.cream,0,2.45,-4.5);box(g,.4,3.4,9,palette.cream,-6,1.9,0);box(g,.4,3.4,9,palette.cream,6,1.9,0);
+
     box(g,12.9,.32,2.6,'#c4c2a6',0,4.85,-3.8);
     for(let x=-5.7;x<=6;x+=.9)box(g,.12,.19,8.8,'#b3ac8e',x,4.4,0);
     textPlane(g,'THE STUDIO',6.5,1.2,0,4.03,-4.25,{size:100,color:'#667655'});
@@ -66,9 +71,9 @@ export class IslandWorld {
     arch(g,0,4.45,'#ded8c4');
   }
   makeGallery(){
-    const g=new T.Group();g.position.set(12,0,-9);this.scene.add(g);this.mark(g,'work');
+    const g=new T.Group();this.building(g,'work');this.scene.add(g);this.mark(g,'work');
     slab(g,12.5,9.5,.4,.22,'#eadfcf',0,.14,0);
-    box(g,12.5,4.8,.4,'#d5b99c',0,2.55,-4.5);box(g,.4,3.4,9,'#e3d1b7',-6,1.9,0);box(g,.4,3.4,9,'#e3d1b7',6,1.9,0);
+
     box(g,13,.28,2.7,'#bc9775',0,5.08,-3.85);textPlane(g,'IDEAS, MADE REAL.',8,1.1,0,4.4,-4.25,{size:92,color:'#604e3e'});
     this.picture(g,'work-01',1.5,3.25,-3.55,2.3,-4.22);this.picture(g,'work-03',1.5,3.25,-1.5,2.3,-4.22);this.picture(g,'work-06',4.5,2.65,2.3,2.6,-4.22);
     cylinder(g,1.05,1.05,.85,palette.cream,3.65,.8,1);const art=mesh(new T.TorusKnotGeometry(.65,.19,50,8),palette.clay,g,3.65,1.85,1);art.rotation.x=.6;art.rotation.y=.4;
@@ -91,10 +96,10 @@ export class IslandWorld {
     for(const p of [[-19,4],[-19.3,5],[-8.2,13.8]])planter(g,...p);
   }
   makeCafe(){
-    const g=new T.Group();g.position.set(13,0,6);this.scene.add(g);this.mark(g,'connect');
-    slab(g,8,5.1,.6,.2,'#eee3cf',0,.26,0);box(g,8,3.4,.35,'#d9c4a5',0,2,-2.1);box(g,.35,3.4,4.2,'#d9c4a5',-3.8,2,0);box(g,.35,3.4,4.2,'#d9c4a5',3.8,2,0);
+    const g=new T.Group();this.building(g,'connect');this.scene.add(g);this.mark(g,'connect');
+    slab(g,8,5.1,.6,.2,'#eee3cf',0,.26,0);
     box(g,8.7,.35,5.2,palette.forest,0,3.85,0);for(let x=-4;x<=4;x+=.45){const slat=box(g,.22,.08,2.4,x%1<.5?'#f0e7d4':'#7f9272',x,3.55,2.2);slat.rotation.x=.14;}
-    textPlane(g,'HELLO, STRANGER.',6,1,0,2.9,-1.85,{size:90,color:'#657251'});box(g,6.7,1.3,.9,'#ba9771',0,1.05,1.5);box(g,7,.15,1.3,palette.cream,0,1.8,1.5);
+    textPlane(g,'HELLO, STRANGER.',6,1,0,2.9,-1.85,{size:90,color:'#657251'});
     cylinder(g,.25,.2,.45,palette.forest,-2,2.1,1.5);cylinder(g,.22,.17,.35,palette.clay,-1.25,2.07,1.55);box(g,.8,.06,.65,'#899976',1.7,1.9,1.5);planter(g,3.3,2.8);
     const mailbox=new T.Group();mailbox.position.set(6,0,3.3);g.add(mailbox);cylinder(mailbox,.12,.15,1.5,palette.wood,0,.9,0);box(mailbox,1.3,.9,.85,palette.clay,0,1.85,0);box(mailbox,.76,.07,.02,palette.dark,0,1.92,.435);textPlane(mailbox,'a.',.6,.45,0,1.62,.45,{width:256,height:180,size:140,color:'#f4edde',italic:true});
     tree(this.scene,20,8,1.05,1);tree(this.scene,18,12,.78,2);
@@ -129,20 +134,36 @@ export class IslandWorld {
     for(const x of [-.82,.82])for(const z of [-.87,.87]){const turn=new T.Group();turn.position.set(x,.49,z);g.add(turn);const tire=cylinder(turn,.37,.37,.24,'#354039');tire.rotation.z=Math.PI/2;const hub=cylinder(turn,.18,.18,.255,'#d9d6bf');hub.rotation.z=Math.PI/2;this.wheels.push({turn,tire,hub,front:z>0});}
     this.carShadow=mesh(new T.CircleGeometry(1.25,32),new T.MeshBasicMaterial({color:'#5d6b4b',transparent:true,opacity:.11,depthWrite:false}),this.scene,0,.21,0);this.carShadow.rotation.x=-Math.PI/2;this.carShadow.scale.set(.77,1.35,1);
   }
-  resize(){const w=this.host.clientWidth,h=this.host.clientHeight;this.renderer.setSize(w,h);const aspect=w/h;const height=w<600?142:aspect<1.2?100:54;this.camera.left=-height*aspect/2;this.camera.right=height*aspect/2;this.camera.top=height/2;this.camera.bottom=-height/2;this.camera.updateProjectionMatrix();}
+  resize(){const w=this.host.clientWidth,h=this.host.clientHeight;this.renderer.setSize(w,h);const aspect=w/h;this.phoneLayout=matchMedia(PHONE_LAYOUT).matches;this.desktopWelcome=!this.started&&matchMedia('(min-width: 951px) and (max-width: 1359px)').matches;if(this.phoneLayout){this.cameraTarget.set(0,0,0);this.zoom=this.userZoom;this.camera.zoom=this.zoom;}const height=this.phoneLayout||this.desktopWelcome?Math.max(74/aspect,54):w<600?142:aspect<1.2?100:46;this.camera.left=-height*aspect/2;this.camera.right=height*aspect/2;this.camera.top=height/2;this.camera.bottom=-height/2;this.camera.updateProjectionMatrix();}
   pick(clientX,clientY){const r=this.host.getBoundingClientRect();this.pointer.set((clientX-r.left)/r.width*2-1,-(clientY-r.top)/r.height*2+1);this.raycaster.setFromCamera(this.pointer,this.camera);const hit=this.raycaster.intersectObjects(this.pickables,true)[0];if(!hit)return null;let node=hit.object;while(node){if(node.userData.station)return node.userData.station;node=node.parent;}return null;}
   project(position){const v=new T.Vector3(...position).project(this.camera);return {x:(v.x*.5+.5)*this.host.clientWidth,y:(-.5*v.y+.5)*this.host.clientHeight,visible:v.z<1&&v.z>-1};}
   render(vehicle,time,dt,steer=0,reduced=false){
     this.car.position.set(vehicle.x,.06,vehicle.z);this.car.rotation.y=vehicle.angle;this.body.rotation.z=T.MathUtils.damp(this.body.rotation.z,-steer*Math.min(Math.abs(vehicle.speed),6)*.012,7,dt);
+    // Visual yaw lag stays on the body: position, vehicle heading and collisions are untouched.
+    const headingDelta=this.lastHeading===undefined?0:Math.atan2(Math.sin(vehicle.angle-this.lastHeading),Math.cos(vehicle.angle-this.lastHeading));
+    this.lastHeading=vehicle.angle;
+    const drift=reduced?0:T.MathUtils.clamp(-headingDelta/Math.max(dt,.001)*.055,-.09,.09)*Math.min(Math.abs(vehicle.speed)/2,1);
+    this.body.rotation.y=T.MathUtils.damp(this.body.rotation.y,drift,7,dt);
     this.body.position.y=reduced?0:Math.sin(time*8)*Math.min(Math.abs(vehicle.speed),1)*.012;
     for(const w of this.wheels){w.turn.rotation.y=w.front?steer*.3:0;w.tire.rotation.x+=vehicle.speed*dt*2.2;w.hub.rotation.x+=vehicle.speed*dt*2.2;}
     this.carShadow.position.set(vehicle.x,.21,vehicle.z);this.carShadow.rotation.z=-vehicle.angle;
     const mobile=this.host.clientWidth<700;
-    const target=!this.started?new T.Vector3(mobile?0:-8,mobile?14:0,mobile?-1:1):this.overview?new T.Vector3(0,0,0):new T.Vector3(vehicle.x*.7,0,vehicle.z*.7-1);
+    const target=this.phoneLayout||this.desktopWelcome?new T.Vector3(0,0,0):!this.started?new T.Vector3(mobile?0:-8,mobile?14:0,mobile?-1:1):this.overview?new T.Vector3(0,0,0):new T.Vector3(vehicle.x*.7,0,vehicle.z*.7-1);
     const factor=reduced?1:1-Math.exp(-dt*3);this.cameraTarget.lerp(target,factor);
-    const wantedZoom=(!this.started?mobile?.85:.95:this.overview?.9:mobile?1.85:1.45)*this.userZoom;
+    const wantedZoom=(this.phoneLayout?1:this.desktopWelcome?.95:!this.started?mobile?.85:.95:this.overview?.9:mobile?1.85:1.45)*this.userZoom;
     this.zoom=T.MathUtils.lerp(this.zoom,wantedZoom,factor);this.camera.zoom=this.zoom;this.camera.updateProjectionMatrix();
-    this.camera.position.set(this.cameraTarget.x+Math.sin(this.orbit)*60,49+this.cameraTarget.y,this.cameraTarget.z+Math.cos(this.orbit)*60);this.camera.lookAt(this.cameraTarget);
+    // Keep the enlarged desktop island inside the right edge without changing zoom.
+    const framedTarget=this.cameraTarget.clone();
+    if(this.host.clientWidth>=1000&&(!this.started||this.overview)){
+      const right=new T.Vector3(Math.cos(this.orbit),0,-Math.sin(this.orbit));
+      const a=Math.abs(right.x),b=Math.abs(right.z);
+      // Support of the 58 × 44 shoreline with quadratic, radius-8 corners.
+      const islandRight=29*a+22*b-8*a*b/(a+b);
+      const margin=40*(this.camera.right-this.camera.left)/this.zoom/this.host.clientWidth;
+      const shift=Math.max(0,islandRight-this.camera.right/this.zoom+margin-framedTarget.dot(right));
+      framedTarget.addScaledVector(right,shift);
+    }
+    this.camera.position.set(framedTarget.x+Math.sin(this.orbit)*60,49+framedTarget.y,framedTarget.z+Math.cos(this.orbit)*60);this.camera.lookAt(framedTarget);
     for(const r of this.rings){const near=Math.hypot(vehicle.x-r.g.position.x,vehicle.z-r.g.position.z)<3.6;r.ring.material.opacity=near?1:.55;r.ring.material.color.set(near?'#526f44':'#a39465');r.disc.material.opacity=near?.5:.18;if(!reduced)r.ring.scale.setScalar(1+Math.sin(time*1.7)*.025);}
     this.renderer.render(this.scene,this.camera);
   }

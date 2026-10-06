@@ -10,3 +10,91 @@ dialog{border:0;padding:0;color:var(--ink);background:var(--paper)}dialog::backd
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
 
 .reset-progress{display:block;margin-top:22px;padding:10px 0;border-bottom:1px solid #aeba97;font-size:10px;color:#7c906b}
+
+/* Stage 1: clearer type hierarchy; retain the existing palette and layout. */
+.topbar nav button{font-size:15px}.brand strong{font-size:16px}.brand small{font-size:10px}
+.reading-link{font-size:13px}.eyebrow,.welcome .eyebrow{font-size:11px}
+.welcome-copy{font-size:16px;line-height:1.9;color:#5e6e55}.primary{font-size:16px}
+.tour-link{font-size:14px}.welcome-note{font-size:10px}
+.place-label strong{font-size:18px;font-weight:500}.place-label small{font-size:10px;color:#67765b}
+.place-label .place-number{font-size:26px}.place-label{padding:12px 15px}
+.exploration-status .eyebrow{font-size:10px}.exploration-status p{font-size:24px}
+.exploration-status button,.destination-prompt button{font-size:14px}.destination-prompt strong{font-size:24px}.destination-prompt small{font-size:10px}
+.keyboard-guide,.bottom-actions button{font-size:12px}.keyboard-guide kbd{font-size:11px}
+.map-heading>span,.map-heading button,.map-progress{font-size:11px}.map-stop{font-size:11px;width:22px;height:22px}
+.journal .body-copy,.about-layout .body-copy,.connect-panel .body-copy{font-size:16px;line-height:1.95}
+.journal h2{font-size:48px}.journal .chapter-subtitle{font-size:28px}
+.work-summary,.work-heading>p,.work-skills p{font-size:15px}.work-skills h3{font-size:22px}
+.journal-facts dd,.journal-tabs button,.connect-links{font-size:14px}
+.journal-tags span,.journal-facts dt,.journal-top .eyebrow,.journal-footer,.about-photo figcaption,.work-metrics p,.source-note,.journal-gallery small,.life-film small,.wechat-copy small,.connect-note{font-size:12px}
+.journal-gallery strong{font-size:19px}.help-dialog dl>div,.help-dialog dt,.help-dialog>p{font-size:14px}
+@media(min-width:1101px){.island-map{width:220px}.welcome h1{font-size:clamp(48px,4.3vw,66px)}}
+@media(min-width:601px) and (max-height:740px){.welcome{top:19%}.welcome h1{font-size:43px;margin-top:14px;line-height:1.3}.welcome-copy{margin-top:16px}.welcome .primary{margin-top:18px}.welcome-note{margin-top:18px}}
+@media(max-width:760px){.topbar nav button{font-size:13px}.reading-link{font-size:11px}.welcome-copy{font-size:14px}.place-label strong{font-size:15px}.place-label small{font-size:9px}.place-label .place-number{font-size:22px}.place-label{padding:9px 11px}.journal h2{font-size:36px}.journal .chapter-subtitle{font-size:25px}.keyboard-guide,.bottom-actions button{font-size:10px}}
+@media(max-width:600px){.brand strong{font-size:14px}.welcome .eyebrow{font-size:9px}.welcome .primary{font-size:15px}.tour-link{font-size:12px}.place-label strong{font-size:13px}.place-label small{font-size:8px}.place-label .place-number{font-size:18px}.place-label{padding:8px;gap:6px}.map-heading>span{font-size:6px}.map-heading button,.map-progress{font-size:8px}.journal h2{font-size:34px}.welcome-copy{max-width:260px}.keyboard-guide::after{font-size:10px}}
+
+/* Medium desktop welcome: give the copy and island separate composition areas. */
+@media(min-width:951px) and (max-width:1359px){
+  body:not(.exploring) #world,body:not(.exploring) .world-labels{inset:104px 24px 92px 330px}
+  .welcome{left:28px;top:22%;width:280px}
+  .welcome h1{font-size:43px;line-height:1.35;letter-spacing:.025em}
+  .welcome-en{font-size:22px}.welcome-copy{font-size:15px;line-height:1.9;margin-top:22px}
+  .welcome-note{font-size:9px;gap:16px;margin-top:26px}
+  body:not(.exploring) .place-label{padding:9px 11px;gap:8px}
+  body:not(.exploring) .place-label strong{font-size:16px}
+  body:not(.exploring) .place-label .place-number{font-size:22px}
+  body:not(.exploring) .island-map{width:190px;padding:12px}
+  body:not(.exploring) .map-body{display:none}
+  body:not(.exploring) .map-heading>span,body:not(.exploring) .map-heading button{font-size:10px;white-space:nowrap}
+  body:not(.exploring) .map-progress{margin-top:10px}
+}
+
+/* Stage 3A: phone-only layout; desktop styling and scene geometry stay unchanged. */
+@media(max-width:600px),(max-width:950px) and (max-height:500px){
+  html,body{overflow-y:auto;overflow-x:hidden}
+  #experience{min-height:650px;--map-top:292px;--map-bottom:150px;--map-left:0px}
+  body.exploring #experience{min-height:560px;--map-top:184px;--map-bottom:216px}
+  #world,.world-labels{inset:calc(var(--map-top) + env(safe-area-inset-top,0px)) 0 calc(var(--map-bottom) + env(safe-area-inset-bottom,0px)) var(--map-left)}
+  .world-labels{overflow:hidden}
+  .world-vignette{background:linear-gradient(180deg,#f2f0e655,transparent 40%,#e9eedc44);pointer-events:none}
+  .topbar{inset:env(safe-area-inset-top,0px) 16px auto;height:62px;gap:12px;flex-wrap:nowrap}
+  .brand{gap:10px}.brand-mark{font-size:34px}.brand strong{font-size:14px;letter-spacing:.03em}.brand small{display:none}
+  .reading-link{margin-left:auto;padding:10px;min-height:44px;font-size:12px;gap:10px;white-space:nowrap}
+  .topbar nav{position:absolute;inset:66px 0 auto;display:flex;gap:0;height:44px;margin:0;background:#f5f1e0e0;border:1px solid #a3b28d47}
+  .topbar nav button{flex:1;font-size:13px;min-width:0;height:44px;padding:0}.topbar nav button>span{margin-left:3px}
+  .welcome{top:calc(124px + env(safe-area-inset-top,0px));left:16px;right:16px;width:auto;pointer-events:none}
+  .welcome .eyebrow{font-size:9px}.welcome h1{font-size:clamp(26px,7.1vw,32px);line-height:1.2;margin-top:8px;letter-spacing:0}
+  .welcome h1 br{display:none}.welcome-en{font-size:18px;line-height:1.2;margin-top:6px}
+  .welcome-copy{font-size:14px;line-height:1.65;margin-top:8px;max-width:none}.welcome-note{display:none}
+  .welcome .primary{position:absolute;top:calc(max(100dvh,650px) - 272px - env(safe-area-inset-bottom,0px) - env(safe-area-inset-top,0px));bottom:auto;left:0;right:0;min-width:0;min-height:48px;margin:0;font-size:16px;line-height:20px;padding:13px 18px;pointer-events:auto}
+  .tour-link{position:absolute;top:calc(max(100dvh,650px) - 224px - env(safe-area-inset-bottom,0px) - env(safe-area-inset-top,0px));bottom:auto;left:0;right:0;min-height:44px;margin:0;justify-content:center;font-size:13px;pointer-events:auto}
+  .island-map,body.exploring .island-map{display:none}
+  .bottom-bar{inset:auto 16px 0;min-height:54px;padding-bottom:env(safe-area-inset-bottom,0px);gap:8px}
+  .keyboard-guide{display:none}.bottom-actions{width:100%;justify-content:space-between;gap:8px}.bottom-actions button{min-height:44px;font-size:12px}
+  .bottom-actions #help-button{width:44px;height:44px;font-size:18px}
+  .exploration-status{top:calc(120px + env(safe-area-inset-top,0px));left:16px;right:16px;max-width:none;min-height:54px;padding:5px 12px;display:flex;align-items:center;gap:8px}
+  .exploration-status .eyebrow{display:none}.exploration-status p{font-size:18px;line-height:1.4;margin:0;flex:1}
+  .exploration-status button{width:auto;min-width:64px;min-height:44px;margin:0;font-size:13px;gap:10px}
+  .mobile-controls:not([hidden]){display:flex;position:absolute;z-index:5;left:50%;right:auto;bottom:calc(64px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:calc(100% - 32px);max-width:350px;justify-content:space-between;align-items:flex-end;gap:16px;padding-top:24px;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  .mobile-controls::before{content:'按住 ↑ 前进，同时按 ← / → 转向';position:absolute;top:0;left:0;right:0;text-align:center;font-size:12px;line-height:20px;color:#5e6e55;white-space:nowrap}
+  .dpad{display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,52px);gap:6px}
+  .dpad button{border:1px solid #9dab8799;background:#f5f0e2f2;border-radius:8px;font-size:26px;touch-action:none;display:grid;place-items:center}
+  .dpad [data-drive=forward]{grid-column:2;grid-row:1}.dpad [data-drive=left]{grid-column:1;grid-row:2}.dpad [data-drive=reverse]{grid-column:2;grid-row:2}.dpad [data-drive=right]{grid-column:3;grid-row:2}
+  .dpad button.active{background:#bac7a4}.mobile-brake{width:56px;height:56px;flex-shrink:0;border-radius:50%;background:#596f4b;color:#f1f2e4;font-size:14px;touch-action:none}
+  .mobile-brake.active{background:#354b29}.mobile-controls button:disabled{cursor:default;opacity:.4}
+  .place-label{padding:6px 8px;gap:5px}.place-label strong{font-size:12px}.place-label small{display:none}.place-label .place-number{font-size:15px;padding-right:5px}
+  .destination-prompt{bottom:calc(212px + env(safe-area-inset-bottom,0px));left:50%;min-width:0;width:calc(100% - 32px);max-width:360px}
+  .toast{bottom:calc(216px + env(safe-area-inset-bottom,0px));font-size:13px}.loading-note{bottom:150px;left:16px}
+  .journal,.help-dialog{max-width:calc(100% - 20px);max-height:calc(100dvh - 24px);overflow-x:hidden;overflow-y:auto}
+  .journal-content{padding:24px 20px}.journal h2{font-size:30px}.journal-footer{gap:12px;flex-wrap:wrap}.journal-footer button,.journal-tabs button,.close{min-height:44px;min-width:44px}
+  .journal-tabs{gap:10px}.wechat-copy strong{font-size:clamp(22px,6.8vw,27px);overflow-wrap:anywhere}.connect-links{gap:16px}.connect-links a,.connect-links button{min-height:44px;display:inline-flex;align-items:center}
+}
+@media(max-width:950px) and (max-height:500px){
+  #experience,body.exploring #experience{min-height:360px;--map-top:112px;--map-bottom:58px;--map-left:280px}
+  .welcome{top:122px;right:auto;width:248px}.welcome h1{font-size:26px}.welcome-en{display:none}.welcome .eyebrow{display:none}.welcome-copy{font-size:13px;line-height:1.5}
+  .welcome .primary{position:static;min-height:44px;margin-top:10px;width:100%;padding:10px 14px;font-size:14px}.tour-link{position:static;min-height:44px;font-size:12px;margin-top:2px;justify-content:flex-start}
+  .exploration-status{top:118px;right:auto;width:248px;min-height:48px}.exploration-status p{font-size:16px}
+  .mobile-controls:not([hidden]){left:16px;transform:none;width:248px;max-width:none;bottom:calc(62px + env(safe-area-inset-bottom,0px));gap:8px;padding-top:22px}
+  .mobile-controls::before{font-size:11px}.dpad{grid-template-columns:repeat(3,48px);grid-template-rows:repeat(2,48px);gap:5px}.mobile-brake{width:52px;height:52px}
+  .destination-prompt{left:auto;right:16px;transform:none;width:260px;bottom:60px}.toast{bottom:60px}
+}

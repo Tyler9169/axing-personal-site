@@ -1,10 +1,18 @@
-import { SPAWN, STATIONS, moveVehicle, findRoute, angleDelta, isFree } from './driving.mjs';
+import { SPAWN, STATIONS, DrivingController, DRIVE_MODE, insideLocation } from './driving.mjs';
+import { PHONE_LAYOUT, bindMobileInput } from './mobile-input.mjs';
 
 const $=(s)=>document.querySelector(s), $$=(s)=>[...document.querySelectorAll(s)];
 const vehicle={...SPAWN}, keys=new Set(), touch=new Set();
-let world=null,started=false,nearby=null,route=[],routeDestination=null,lastTime=0,elapsed=0,frame=0,activeChapter=0,toastTimer,drag=null,lastPinch=0,contextLost=false;
+const driving=new DrivingController(vehicle);
+const phoneLayout=matchMedia(PHONE_LAYOUT);
+let mobileInput=null;
+let world=null,started=false,nearby=null,lastTime=0,elapsed=0,frame=0,activeChapter=0,toastTimer,drag=null,lastPinch=0,contextLost=false;
 let visited=new Set();try{visited=new Set(JSON.parse(localStorage.getItem('axing-island-visited')||'[]').filter(id=>STATIONS.some(s=>s.id===id)));}catch{}
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+let previewPaused=false,pendingDestination=null;
+function updatePreviewToggle(){const b=$('#preview-toggle');b.textContent=previewPaused?'播放小车':'暂停小车';b.setAttribute('aria-pressed',String(previewPaused));}
+$('#preview-toggle').addEventListener('click',()=>{previewPaused=!previewPaused;updatePreviewToggle();});
+updatePreviewToggle();
 const stationButtons=STATIONS.map((s,i)=>{const b=document.createElement('button');b.className='place-label';b.dataset.go=s.id;b.setAttribute('aria-label',`前往${s.title}`);b.innerHTML=`<span class="place-number">0${i+1}</span><span><strong>${s.title}</strong><small>${s.english}</small></span>`;$('#world-labels').append(b);return b;});
 const photoData={
   'travel-01':['窗边的一刻','ON THE ROAD','阿星坐在窗边，望向窗外'],
@@ -28,7 +36,7 @@ connect:()=>`<div class="journal-content connect-panel"><h2 id="journal-title">�
 };
 
 function toast(message){clearTimeout(toastTimer);const node=$('#toast');node.textContent=message;node.classList.add('visible');toastTimer=setTimeout(()=>node.classList.remove('visible'),3300);}
-function clearInput(){keys.clear();touch.clear();$$('[data-drive]').forEach(b=>b.classList.remove('active'));}
+function clearInput(){keys.clear();mobileInput?.clear();touch.clear();$$('[data-drive]').forEach(b=>b.classList.remove('active'));}
 function isModalOpen(){return !!document.querySelector('dialog[open]');}
 function showDialog(dialog){clearInput();vehicle.speed=0;dialog.showModal();}
 function updateProgress(){
@@ -40,30 +48,41 @@ function updateProgress(){
 }
 function openChapter(id){
   const s=STATIONS.find(s=>s.id===id);if(!s)return;
-  activeChapter=STATIONS.indexOf(s);route=[];routeDestination=null;vehicle.speed=0;
+  if(world&&!contextLost&&!driving.openLocation(id))return;
+  activeChapter=STATIONS.indexOf(s);vehicle.speed=0;
   $('#journal-eyebrow').textContent=`0${activeChapter+1} / ${s.english}`;
   $('#journal-content').innerHTML=chapters[id]();
   visited.add(id);updateProgress();$('#journal-counter').textContent=`发现 ${visited.size} / 4 · ${s.title}`;
   $('#journal-next').innerHTML=`前往${STATIONS[(activeChapter+1)%4].short} <span aria-hidden="true">→</span>`;
   $('#journal').scrollTop=0;showDialog($('#journal'));
   $('#journey-title').textContent=visited.size===4?'四个章节，都留下了你的足迹。':'随心开，慢慢逛。';
+  $('#drive-status').textContent=`已到达${s.title}，正在阅读地点内容。`;
 }
 function start(){
-  if(!world)return;if(started)return;started=true;world.started=true;document.body.classList.add('exploring');
+  if(!world||started)return;
+  started=true;clearInput();driving.startExploring();world.started=true;$('#preview-toggle').hidden=true;document.body.classList.add('exploring');
   $('#welcome').classList.add('leaving');setTimeout(()=>{$('#welcome').hidden=true;},500);
   $('#exploration-status').hidden=false;$('#mobile-controls').hidden=false;
-  $('#drive-status').textContent='探索开始。使用方向键或 W A S D 驾驶，也可以点击地图自动前往。';
+  $('#journey-title').textContent='正在返回探索起点…';
+  $('#drive-status').textContent='小车正在返回起点，到达后即可使用方向键探索。';
 }
 function go(id){
-  if(!world||contextLost){openChapter(id);return;}start();clearInput();const s=STATIONS.find(s=>s.id===id);if(!s)return;
-  if(Math.hypot(vehicle.x-s.x,vehicle.z-s.z)<2.2){openChapter(id);return;}
-  route=findRoute(vehicle,s);routeDestination=s;
-  if(!route.length){routeDestination=null;toast('这条路暂时走不通，先把小车开回路上吧。');return;}
+  if(!world||contextLost){openChapter(id);return;}
+  // Choosing a destination on the welcome screen still completes the return first.
+  if(!started){start();pendingDestination=id;return;}
+  if(driving.mode!==DRIVE_MODE.EXPLORE)return;
+  clearInput();const s=STATIONS.find(s=>s.id===id);if(!s)return;
+  if(!driving.goTo(id)){toast('这条路暂时走不通，先把小车开回路上吧。');return;}
   world.overview=false;$('#view-button').setAttribute('aria-pressed','false');$('#view-button').textContent='全岛视角 ↗';
   $('#journey-title').textContent=`正前往${s.title}`;$('#drive-status').textContent=`正在自动驾驶前往${s.title}。按方向键可接管。`;
 }
-function toggleView(){if(!world)return;start();world.overview=!world.overview;$('#view-button').setAttribute('aria-pressed',String(world.overview));$('#view-button').textContent=world.overview?'跟随小车 ↙':'全岛视角 ↗';}
-function resetCar(){if(!world)return;Object.assign(vehicle,SPAWN);route=[];routeDestination=null;nearby=null;$('#destination-prompt').hidden=true;clearInput();world.userZoom=1;$('#journey-title').textContent='回到起点，再出发。';$('#drive-status').textContent='小车已回到起点，可以继续驾驶。';toast('小车已回到起点。');}
+function toggleView(){if(!world)return;world.overview=!world.overview;$('#view-button').setAttribute('aria-pressed',String(world.overview));$('#view-button').textContent=world.overview?'跟随小车 ↙':'全岛视角 ↗';}
+function resetCar(){
+  if(!world)return;if(!started){start();return;}
+  if(driving.mode===DRIVE_MODE.RETURNING_TO_START)return;
+  clearInput();pendingDestination=null;driving.startExploring();nearby=null;$('#destination-prompt').hidden=true;world.userZoom=1;
+  $('#journey-title').textContent='正在返回探索起点…';$('#drive-status').textContent='小车正在沿安全路线返回起点。';
+}
 
 $('#start-button').addEventListener('click',start);$('#tour-button').addEventListener('click',()=>go('about'));
 $$('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
@@ -72,9 +91,9 @@ $('#enter-button').addEventListener('click',()=>{if(nearby)openChapter(nearby.id
 $('#view-button').addEventListener('click',toggleView);$('#reset-button').addEventListener('click',resetCar);$('#home-button').addEventListener('click',resetCar);
 $('#help-button').addEventListener('click',()=>showDialog($('#help-dialog')));
 $('#reset-progress').addEventListener('click',()=>{visited.clear();activeChapter=0;updateProgress();$('#help-dialog').close();resetCar();});
-$('#journal-next').addEventListener('click',()=>{$('#journal').close();go(STATIONS[(activeChapter+1)%4].id);});
+$('#journal-next').addEventListener('click',()=>{$('#journal').close();driving.closeLocation();go(STATIONS[(activeChapter+1)%4].id);});
 $$('[data-close]').forEach(b=>b.addEventListener('click',()=>document.getElementById(b.dataset.close).close()));
-$$('dialog').forEach(d=>{d.addEventListener('close',()=>{clearInput();lastTime=0;});d.addEventListener('click',e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();});});
+$$('dialog').forEach(d=>{d.addEventListener('close',()=>{if(d.id==='journal'){driving.closeLocation();if(!driving.destination)$('#drive-status').textContent='已关闭地点内容，可继续驾驶探索。';}clearInput();lastTime=0;});d.addEventListener('click',e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();});});
 $('#journal-content').addEventListener('click',async e=>{
   const imageButton=e.target.closest('[data-photo]');
   if(imageButton){const id=imageButton.dataset.photo;const item=photoData[id];const title=item?item[0]:workTitles[Number(id.slice(-1))-1];$('#photo-title').textContent=title;$('#photo-image').src=`../assets/${id}.webp`;$('#photo-image').alt=item?item[2]:title;showDialog($('#photo-dialog'));return;}
@@ -83,12 +102,20 @@ $('#journal-content').addEventListener('click',async e=>{
   if(e.target.closest('#share-button')){const url=location.href.split('#')[0];if(['localhost','127.0.0.1','[::1]'].includes(location.hostname)){e.target.closest('#share-button').textContent='发布后即可分享公开链接';return;}try{await navigator.clipboard.writeText(url);e.target.closest('#share-button').textContent='链接已复制 ✓';}catch{window.prompt('复制网址，分享这座小岛',url);}}
 });
 
+function takeManualControl(){
+  const wasNavigating=driving.mode===DRIVE_MODE.EXPLORE&&!!driving.destination;
+  driving.takeControl();
+  if(wasNavigating&&!driving.destination){
+    $('#journey-title').textContent='方向盘交给你了。';
+    $('#drive-status').textContent='已取消自动带路。可手动驾驶，进入地点有效区域后自动打开内容。';
+  }
+}
 const drivingKeys=new Set(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' ','shift']);
 window.addEventListener('keydown',e=>{
   if(e.target instanceof HTMLInputElement||e.target instanceof HTMLTextAreaElement||isModalOpen())return;
   const k=e.key.toLowerCase();
   const focusedControl=e.target.closest?.('button,a');
-  if(drivingKeys.has(k)&&started&&!(k===' '&&focusedControl)){e.preventDefault();keys.add(k);if(routeDestination){route=[];routeDestination=null;$('#journey-title').textContent='方向盘交给你了。';}}
+  if(drivingKeys.has(k)&&started&&!(k===' '&&focusedControl)){e.preventDefault();if(driving.mode===DRIVE_MODE.EXPLORE){keys.add(k);if(driving.destination)takeManualControl();}}
   if(e.repeat)return;
   // Enter on a focused control keeps its native button behavior.
   if((k==='e'||(k==='enter'&&!focusedControl))&&nearby&&started){e.preventDefault();openChapter(nearby.id);}
@@ -96,37 +123,45 @@ window.addEventListener('keydown',e=>{
 });
 window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',clearInput);
 document.addEventListener('visibilitychange',()=>{clearInput();lastTime=0;});
-$$('[data-drive]').forEach(b=>{
-  b.addEventListener('pointerdown',e=>{e.preventDefault();start();route=[];routeDestination=null;b.setPointerCapture(e.pointerId);touch.add(b.dataset.drive);b.classList.add('active');});
-  const release=()=>{touch.delete(b.dataset.drive);b.classList.remove('active');};
-  b.addEventListener('pointerup',release);b.addEventListener('pointercancel',release);b.addEventListener('lostpointercapture',release);
-});
+mobileInput=bindMobileInput($('#mobile-controls'),touch,
+  ()=>phoneLayout.matches&&driving.mode===DRIVE_MODE.EXPLORE&&!isModalOpen()&&!contextLost,
+  ()=>takeManualControl());
+$('#mobile-controls').setAttribute('aria-label','按住前进或倒车，同时按左右键转向；松手停止输入');
+phoneLayout.addEventListener('change',()=>{mobileInput.clear();mobileInput.sync();});
 
 function manualInput(){return {throttle:(keys.has('w')||keys.has('arrowup')||touch.has('forward')?1:0)-(keys.has('s')||keys.has('arrowdown')||touch.has('reverse')?1:0),steer:(keys.has('a')||keys.has('arrowleft')||touch.has('left')?1:0)-(keys.has('d')||keys.has('arrowright')||touch.has('right')?1:0),brake:keys.has(' ')||touch.has('brake'),boost:keys.has('shift')};}
-function autopilot(dt){
-  if(!route.length)return;
-  let target=route[0],dist=Math.hypot(target.x-vehicle.x,target.z-vehicle.z);
-  while(dist<.35&&route.length>1){route.shift();target=route[0];dist=Math.hypot(target.x-vehicle.x,target.z-vehicle.z);}
-  if(dist<.4&&route.length===1){const id=routeDestination.id;route=[];routeDestination=null;vehicle.speed=0;openChapter(id);return;}
-  const desired=Math.atan2(target.x-vehicle.x,target.z-vehicle.z),delta=angleDelta(desired,vehicle.angle);
-  vehicle.angle+=Math.max(-2.9*dt,Math.min(2.9*dt,delta));
-  const speed=Math.abs(delta)>.48?0:Math.min(5.1,dist*4.5);vehicle.speed=speed;
-  const nx=vehicle.x+Math.sin(vehicle.angle)*speed*dt,nz=vehicle.z+Math.cos(vehicle.angle)*speed*dt;
-  if(isFree(nx,nz)){vehicle.x=nx;vehicle.z=nz;}
-  else {const s=routeDestination;route=findRoute(vehicle,s);vehicle.speed=0;if(!route.length){routeDestination=null;toast('自动带路暂停了。可以回到起点，再选择目的地。');}}
-}
 function updateInterface(){
   const w=$('#world').clientWidth,h=$('#world').clientHeight;
-  stationButtons.forEach((b,i)=>{const p=world.project(STATIONS[i].label);b.style.left=`${p.x}px`;b.style.top=`${p.y}px`;const masked=!started&&(w<600?p.y<355||p.y>h-155:p.x<390&&p.y>150&&p.y<h-100);b.style.visibility=p.visible&&p.x>40&&p.x<w-40&&p.y>135&&p.y<h-70&&!masked?'visible':'hidden';b.classList.toggle('nearby',nearby?.id===STATIONS[i].id);});
+  mobileInput.sync();
+  stationButtons.forEach((b,i)=>{
+    const p=world.project(STATIONS[i].label);b.style.left=`${p.x}px`;b.style.top=`${p.y}px`;
+    if(world.desktopWelcome){
+      // Keep the existing visible buttons inside their dedicated scene viewport.
+      b.style.left=`${Math.max(b.offsetWidth/2+8,Math.min(w-b.offsetWidth/2-8,p.x))}px`;
+      b.style.top=`${Math.max(b.offsetHeight+8,Math.min(h-24,p.y))}px`;
+      b.style.visibility=p.visible?'visible':'hidden';b.classList.toggle('nearby',nearby?.id===STATIONS[i].id);return;
+    }
+    const masked=!started&&(w<600?p.y<425||p.y>h-165:p.x<440&&p.y>150&&p.y<h-100);
+    const fits=phoneLayout.matches?p.x>b.offsetWidth/2+4&&p.x<w-b.offsetWidth/2-4&&p.y>b.offsetHeight+4&&p.y<h-8:p.x>40&&p.x<w-40&&p.y>135&&p.y<h-70&&!masked;
+    b.style.visibility=p.visible&&fits?'visible':'hidden';b.classList.toggle('nearby',nearby?.id===STATIONS[i].id);
+  });
   const mx=90+vehicle.x*2.8,my=64+vehicle.z*2.6;$('#map-car').setAttribute('transform',`translate(${mx.toFixed(2)} ${my.toFixed(2)}) rotate(${(180-vehicle.angle*180/Math.PI).toFixed(1)})`);
-  if(started){const s=STATIONS.find(s=>Math.hypot(vehicle.x-s.x,vehicle.z-s.z)<3.6)||null;if(s?.id!==nearby?.id){nearby=s;$('#destination-prompt').hidden=!s;if(s){$('#nearby-subtitle').textContent=s.english;$('#nearby-title').textContent=s.title;$('#drive-status').textContent=`已到达${s.title}附近，按 E 进入。`;}}}
-  $('#experience').dataset.x=vehicle.x.toFixed(2);$('#experience').dataset.z=vehicle.z.toFixed(2);$('#experience').dataset.speed=vehicle.speed.toFixed(2);$('#experience').dataset.mode=routeDestination?'autopilot':started?'driving':'welcome';
+  if(started){const s=driving.mode===DRIVE_MODE.EXPLORE?STATIONS.find(s=>insideLocation(vehicle,s.id)&&!driving.blocked.has(s.id))||null:null;if(s?.id!==nearby?.id){nearby=s;$('#destination-prompt').hidden=!s;if(s){$('#nearby-subtitle').textContent=s.english;$('#nearby-title').textContent=s.title;$('#drive-status').textContent=`已进入${s.title}，可以阅读地点内容。`;}}}
+  $('#experience').dataset.x=vehicle.x.toFixed(2);$('#experience').dataset.z=vehicle.z.toFixed(2);$('#experience').dataset.speed=vehicle.speed.toFixed(2);$('#experience').dataset.mode=driving.mode;
 }
 function loop(timestamp){
   requestAnimationFrame(loop);if(!world||contextLost||document.hidden)return;
   if(isModalOpen()){lastTime=timestamp;return;}
   const dt=lastTime?Math.min((timestamp-lastTime)/1000,.05):.016;lastTime=timestamp;elapsed+=dt;
-  const input=manualInput();if(started&&!isModalOpen()){if(routeDestination)autopilot(dt);else moveVehicle(vehicle,input,dt);}
+  const input=manualInput();
+  const previousMode=driving.mode,previousError=driving.error;
+  const arrival=driving.update(input,dt,{paused:previewPaused});
+  if(previousMode===DRIVE_MODE.RETURNING_TO_START&&driving.mode===DRIVE_MODE.EXPLORE){
+    clearInput();$('#journey-title').textContent='随心开，慢慢逛。';$('#drive-status').textContent='已回到起点。使用方向键驾驶，进入地点区域后即可阅读内容。';
+    if(pendingDestination){const id=pendingDestination;pendingDestination=null;go(id);}
+  }
+  if(driving.error&&driving.error!==previousError)toast(driving.error);
+  if(arrival)openChapter(arrival.id);
   world.render(vehicle,elapsed,dt,input.steer,reduced.matches);if(++frame%3===0)updateInterface();
 }
 function showFallback(message){contextLost=true;$('#welcome').hidden=true;$('#loading-note').hidden=true;$('#fallback').hidden=false;$('#world-labels').hidden=true;$('.island-map').hidden=true;$('#mobile-controls').hidden=true;$('.bottom-bar').hidden=true;$('#exploration-status').hidden=true;$('#destination-prompt').hidden=true;$('#experience').dataset.mode='fallback';console.warn(message);}
@@ -141,5 +176,7 @@ try {
   canvas.addEventListener('pointerup',e=>{pointers.delete(e.pointerId);if(drag&&!drag.moved){const id=world.pick(e.clientX,e.clientY);if(id)go(id);}drag=null;lastPinch=0;});
   canvas.addEventListener('pointercancel',e=>{pointers.delete(e.pointerId);drag=null;lastPinch=0;});
   canvas.addEventListener('wheel',e=>{e.preventDefault();world.userZoom=Math.max(.65,Math.min(1.7,world.userZoom*Math.exp(-e.deltaY*.001)));},{passive:false});
-  window.addEventListener('resize',()=>world.resize());updateProgress();requestAnimationFrame(loop);
+  window.addEventListener('resize',()=>world.resize());
+  new ResizeObserver(()=>world.resize()).observe($('#world'));
+  updateProgress();requestAnimationFrame(loop);
 }catch(error){showFallback(error.message);}
