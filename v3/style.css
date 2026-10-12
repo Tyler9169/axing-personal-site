@@ -113,3 +113,14 @@ dialog{border:0;padding:0;color:var(--ink);background:var(--paper)}dialog::backd
   .mobile-controls::before{font-size:11px}.dpad{grid-template-columns:repeat(3,48px);grid-template-rows:repeat(2,48px);gap:5px}.mobile-brake{width:52px;height:52px}
   .destination-prompt{left:auto;right:16px;transform:none;width:260px;bottom:60px}.toast{bottom:60px}
 }
+
+/* Resume portfolio link */
+.resume-project{display:flex;align-items:center;justify-content:space-between;gap:24px;margin:28px 0;padding:28px;border:1px solid #7a856a;border-radius:8px;background:#e7eadc;color:#27382b;text-decoration:none;text-align:left;transition:background .2s}
+.resume-project:hover{background:#dce2ce}
+.resume-project:focus-visible{outline:3px solid #3e5b46;outline-offset:4px}
+.resume-project>span:first-child{display:grid;gap:10px;min-width:0}
+.resume-project small{font-size:11px;letter-spacing:.1em}
+.resume-project strong{font-size:clamp(20px,3vw,28px);line-height:1.4}
+.resume-project-description{font-size:14px;line-height:1.8}
+.resume-project-action{flex-shrink:0;font-size:14px;font-weight:600}
+@media(max-width:600px){.resume-project{align-items:flex-start;flex-direction:column;gap:18px;padding:22px}.resume-project-description{font-size:13px}}

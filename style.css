@@ -15,3 +15,14 @@ dialog{border:0;padding:0}dialog::backdrop{background:#11180fe0;backdrop-filter:
 @media(max-width:600px){.wechat-contact{gap:10px;flex-wrap:wrap;padding-top:15px}.wechat-contact strong{font-size:15px}.wechat-contact>span:first-child{font-size:9px}.copy-label{font-size:8px;margin-left:0}.connect-main{position:relative}.connect-main>div{width:100%}.connect-arrow{position:absolute;right:0;top:95px}.connect-main h2{padding-right:40px}}
 @media(max-width:360px){.container{width:calc(100% - 32px)}.hero h1{font-size:50px}.hero-photo-frame{height:375px}.hero-topline{font-size:5.5px}.gallery-tabs{gap:15px}.connect-main h2{font-size:28px}.connect-arrow{width:48px;height:48px}.gallery-image{height:340px}.metrics p{font-size:8px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important;animation:none!important}}
+
+/* Resume portfolio link */
+.resume-project{display:flex;align-items:center;justify-content:space-between;gap:24px;margin:28px 0;padding:28px;border:1px solid #7a856a;border-radius:8px;background:#e7eadc;color:#27382b;text-decoration:none;text-align:left;transition:background .2s}
+.resume-project:hover{background:#dce2ce}
+.resume-project:focus-visible{outline:3px solid #3e5b46;outline-offset:4px}
+.resume-project>span:first-child{display:grid;gap:10px;min-width:0}
+.resume-project small{font-size:11px;letter-spacing:.1em}
+.resume-project strong{font-size:clamp(20px,3vw,28px);line-height:1.4}
+.resume-project-description{font-size:14px;line-height:1.8}
+.resume-project-action{flex-shrink:0;font-size:14px;font-weight:600}
+@media(max-width:600px){.resume-project{align-items:flex-start;flex-direction:column;gap:18px;padding:22px}.resume-project-description{font-size:13px}}
